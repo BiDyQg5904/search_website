@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "@postlight/parser": "^2.2.3",
+    "he": "^1.2.0"
+  }
+}

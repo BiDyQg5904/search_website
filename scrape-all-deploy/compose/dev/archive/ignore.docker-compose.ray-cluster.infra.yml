@@ -1,0 +1,50 @@
+version: "3.7"
+
+services:
+
+  ray-head:
+    # image: ${RAY_IMAGE}
+    build:
+      context: ../
+      dockerfile: docker_files/ray
+    container_name: ray-head
+    ports:
+      - "${RAY_REDIS_PUBLIC_PORT}:${RAY_REDIS_PORT}"
+      - "${RAY_DASHBOARD_PUBLIC_PORT}:${RAY_DASHBOARD_PORT}"
+      - "${RAY_HEAD_NODE_PUBLIC_PORT}:${RAY_HEAD_NODE_PORT}"
+    env_file:
+      - ./.env
+    command: bash -c "ray start --head --dashboard-port=${RAY_DASHBOARD_PORT} --port=${RAY_REDIS_PORT} --dashboard-host=0.0.0.0 --redis-password=${RAY_REDIS_PASSWORD} --block"
+    shm_size: 2g
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: '2g'
+    depends_on:
+      - redis
+
+  ray-worker:
+    # image: ${RAY_IMAGE}
+    build:
+      context: ../
+      dockerfile: docker_files/ray
+    # container_name: ray_worker
+    depends_on: 
+      - ray-head
+    env_file:
+      - ./.env
+    command: bash -c "ray start --address=ray-head:${RAY_REDIS_PORT} --redis-password=${RAY_REDIS_PASSWORD} --num-cpus=${RAY_NUM_CPU_WORKER} --block" 
+    shm_size: 2g
+    deploy:
+      mode: replicated
+      replicas: ${RAY_NUM_WORKERS} 
+      resources:
+        limits:
+          cpus: ${RAY_NUM_CPU_WORKER}
+          memory: '2g'
+
+networks:
+  default:
+    name: asset_analyzer_network
+    driver: bridge

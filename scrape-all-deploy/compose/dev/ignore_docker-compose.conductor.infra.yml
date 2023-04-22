@@ -1,0 +1,46 @@
+version: '2.3'
+
+services:
+  conductor-server:
+    container_name: conductor-server
+    environment:
+      - CONFIG_PROP=config-postgres.properties
+    links:
+      - postgres:postgresdb
+    depends_on:
+      postgres:
+        condition: service_healthy
+    image: conductor:server
+    build:
+      context: ./docker_files/conductor_docker
+      dockerfile: ./server/Dockerfile
+    networks:
+      - asset_analyzer_network
+    ports:
+      - ${CONDUCTOR_SERVER_PUBLIC_PORT}:${CONDUCTOR_SERVER_INTERNAL_PORT}
+    healthcheck:
+      test: ["CMD", "curl","-I" ,"-XGET", "http://localhost:${CONDUCTOR_SERVER_PUBLIC_PORT}/health"]
+      interval: 60s
+      timeout: 30s
+      retries: 12
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1k"
+        max-file: "3"
+
+  conductor-ui:
+    container_name: conductor-ui
+    environment:
+      - WF_SERVER=${CONDUCTOR_UI_WF_SERVER}
+    image: conductor:ui
+    build:
+      context: ./docker_files/conductor_docker
+      dockerfile: ./ui/Dockerfile
+    networks:
+      - asset_analyzer_network
+    ports:
+      - ${CONDUCTOR_UI_PUBLIC_PORT}:${CONDUCTOR_UI_INTERNAL_PORT}
+    links:
+      - conductor-server
+    stdin_open: true

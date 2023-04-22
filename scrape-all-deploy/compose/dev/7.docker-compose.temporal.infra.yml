@@ -1,0 +1,93 @@
+version: "3.5"
+services:
+  temporal_db:
+    # container_name: temporal_db
+    command: 
+      - "-c"
+      - "ssl=on" 
+      - "-c"
+      - "ssl_cert_file=/pki/temporal_db.pem"
+      - "-c"
+      - "ssl_key_file=/pki/temporal_db-key.pem"
+      - "-c"
+      - "ssl_ca_file=/pki/ca.pem"
+    environment:
+      POSTGRES_PASSWORD: ${TEMPORAL_DB_PASSWORD}
+      POSTGRES_USER: ${TEMPORAL_DB_USER}
+      # POSTGRES_DB: asdasdasdasd
+    image: postgres:15
+    networks:
+      - asset_analyzer_network
+    ports:
+      - ${TEMPORAL_DB_PUBLIC_PORT}:${TEMPORAL_DB_INTERNAL_PORT}
+    volumes:
+      - temporal_tls_pki:/pki
+      - ./data/temporal_db:/var/lib/postgresql/data
+    # restart: on-failure
+
+  temporal:
+    # container_name: temporal
+    build:
+      context: .
+      dockerfile: docker_files/temporal/Dockerfile.auto-setup-tls
+      args:
+        - BASEIMAGE=auto-setup:${TEMPORAL_VERSION}
+    image: auto-setup-tls:${TEMPORAL_VERSION}
+    depends_on:
+      - temporal_db
+    environment:
+      - DB=${TEMPORAL_DB}
+      - DB_PORT=${TEMPORAL_DB_PORT}
+      - POSTGRES_USER=${TEMPORAL_DB_USER}
+      - POSTGRES_PWD=${TEMPORAL_DB_PWD}
+      - POSTGRES_SEEDS=${TEMPORAL_SEEDS}
+      - SQL_TLS=${TEMPORAL_SQL_TLS}
+      - DYNAMIC_CONFIG_FILE_PATH=${TEMPORAL_DYNAMIC_CONFIG_FILE_PATH}
+      - ENABLE_ES=${TEMPORAL_ENABLE_ES}
+    networks:
+      - asset_analyzer_network
+    ports:
+      - ${TEMPORAL_PUBLIC_PORT}:${TEMPORAL_INTERNAL_PORT}
+    volumes:
+      - ./conf/temporal:/etc/temporal/config/dynamicconfig
+    # restart: on-failure
+
+  temporal-admin-tools:
+    # container_name: temporal-admin-tools
+    depends_on:
+      - temporal
+    environment:
+      - TEMPORAL_CLI_ADDRESS=${TEMPORAL_ADMIN_TOOLS_TEMPORAL_CLI_ADDRESS}
+    build:
+      context: .
+      dockerfile: docker_files/temporal/Dockerfile.admin-tools-tls
+      args:
+        - BASEIMAGE=admin-tools:${TEMPORAL_VERSION}
+    image: temporalio/admin-tools-tls:${TEMPORAL_VERSION}
+    networks:
+      - asset_analyzer_network
+    stdin_open: true
+    tty: true
+
+  temporal-ui:
+    # container_name: temporal-ui
+    depends_on:
+      - temporal
+    environment:
+      - TEMPORAL_ADDRESS=${TEMPORAL_UI_TEMPORAL_ADDRESS}
+      - TEMPORAL_CORS_ORIGINS=${TEMPORAL_UI_TEMPORAL_CORS_ORIGINS}
+    image: temporalio/ui:${TEMPORAL_UI_VERSION}
+    networks:
+      - asset_analyzer_network
+    ports:
+      - ${TEMPORAL_UI_PUBLIC_PORT}:${TEMPORAL_UI_INTERNAL_PORT}
+    # restart: on-failure
+
+networks:
+  asset_analyzer_network:
+    driver: bridge
+    name: asset_analyzer_network
+    
+volumes:
+  temporal_tls_pki:
+   external: true

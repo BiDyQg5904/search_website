@@ -1,0 +1,11 @@
+{
+    "kafka-cluster": true,
+    "minio-cluster": false,
+    "miniflux": true,
+    "debezium": true,
+    "temporal": true,
+    "nocodb": false,
+    "clickhouse": true,
+    "redash": false,
+    "nebula-graph": false
+}

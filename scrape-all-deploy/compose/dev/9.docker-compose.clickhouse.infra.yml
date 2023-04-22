@@ -1,0 +1,100 @@
+version: '3'
+
+services:
+  clickhouse-zookeeper:
+    image: zookeeper
+    ports:
+      - "${CLICK_HOUSE_ZOOKEEPER_PUBLIC_PORT_1}:${CLICK_HOUSE_ZOOKEEPER_INTERNAL_PORT_1}"
+      - "${CLICK_HOUSE_ZOOKEEPER_PUBLIC_PORT_2}:${CLICK_HOUSE_ZOOKEEPER_INTERNAL_PORT_2}"
+    # container_name: clickhouse-zookeeper
+    # hostname: clickhouse-zookeeper
+    networks:
+      - asset_analyzer_network
+
+  clickhouse-01:
+    image: yandex/clickhouse-server
+    # hostname: clickhouse-01
+    # container_name: clickhouse-01
+    ports:
+      - ${CLICK_HOUSE_SERVER_1_PUBLIC_PORT_1}:${CLICK_HOUSE_SERVER_1_INTERNAL_PORT_1}
+      - ${CLICK_HOUSE_SERVER_1_PUBLIC_PORT_2}:${CLICK_HOUSE_SERVER_1_INTERNAL_PORT_2}
+    volumes:
+      - ./conf/clickhouse/config.xml:/etc/clickhouse-server/config.xml
+      # - ./conf/clickhouse/clickhouse_metrika.xml:/etc/clickhouse-server/metrika.xml
+      - ./conf/clickhouse/macros/macros-01.xml:/etc/clickhouse-server/config.d/macros.xml
+      - ./conf/clickhouse/users.xml:/etc/clickhouse-server/users.xml
+      - ./data/clickhouse/server-01:/var/lib/clickhouse
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    depends_on:
+      - clickhouse-zookeeper
+    networks:
+      - asset_analyzer_network
+
+  clickhouse-02:
+    image: yandex/clickhouse-server
+    # hostname: clickhouse-02
+    # container_name: clickhouse-02
+    ports:
+      - ${CLICK_HOUSE_SERVER_2_PUBLIC_PORT_1}:${CLICK_HOUSE_SERVER_2_INTERNAL_PORT_1}
+      - ${CLICK_HOUSE_SERVER_2_PUBLIC_PORT_2}:${CLICK_HOUSE_SERVER_2_INTERNAL_PORT_2}
+    volumes:
+      - ./conf/clickhouse/config.xml:/etc/clickhouse-server/config.xml
+      # - ./conf/clickhouse/clickhouse_metrika.xml:/etc/clickhouse-server/metrika.xml
+      - ./conf/clickhouse/macros/macros-02.xml:/etc/clickhouse-server/config.d/macros.xml
+      - ./conf/clickhouse/users.xml:/etc/clickhouse-server/users.xml
+      - ./data/clickhouse/server-02:/var/lib/clickhouse
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    depends_on:
+      - clickhouse-zookeeper
+    networks:
+      - asset_analyzer_network
+
+  clickhouse-03:
+    image: yandex/clickhouse-server
+    # hostname: clickhouse-03
+    # container_name: clickhouse-03
+    ports:
+      - ${CLICK_HOUSE_SERVER_3_PUBLIC_PORT_1}:${CLICK_HOUSE_SERVER_3_INTERNAL_PORT_1}
+      - ${CLICK_HOUSE_SERVER_3_PUBLIC_PORT_2}:${CLICK_HOUSE_SERVER_3_INTERNAL_PORT_2}
+    volumes:
+      - ./conf/clickhouse/config.xml:/etc/clickhouse-server/config.xml
+      # - ./conf/clickhouse/clickhouse_metrika.xml:/etc/clickhouse-server/metrika.xml
+      - ./conf/clickhouse/macros/macros-03.xml:/etc/clickhouse-server/config.d/macros.xml
+      - ./conf/clickhouse/users.xml:/etc/clickhouse-server/users.xml
+      - ./data/clickhouse/server-03:/var/lib/clickhouse
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    depends_on:
+      - clickhouse-zookeeper
+    networks:
+      - asset_analyzer_network
+
+  clickhouse-04:
+    image: yandex/clickhouse-server
+    # hostname: clickhouse-04
+    # container_name: clickhouse-04
+    ports:
+      - ${CLICK_HOUSE_SERVER_4_PUBLIC_PORT_1}:${CLICK_HOUSE_SERVER_4_INTERNAL_PORT_1}
+      - ${CLICK_HOUSE_SERVER_4_PUBLIC_PORT_2}:${CLICK_HOUSE_SERVER_4_INTERNAL_PORT_2}
+    volumes:
+      - ./conf/clickhouse/config.xml:/etc/clickhouse-server/config.xml
+      # - ./conf/clickhouse/clickhouse_metrika.xml:/etc/clickhouse-server/metrika.xml
+      - ./conf/clickhouse/macros/macros-04.xml:/etc/clickhouse-server/config.d/macros.xml
+      - ./conf/clickhouse/users.xml:/etc/clickhouse-server/users.xml
+      - ./data/clickhouse/server-04:/var/lib/clickhouse
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    depends_on:
+      - clickhouse-zookeeper
+    networks:
+      - asset_analyzer_network

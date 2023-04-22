@@ -1,0 +1,343 @@
+version: "3.8"
+
+services:
+
+  #Arango Agency 1 start
+  arangodb-agency1:
+    image: arangodb/arangodb
+    container_name: ${ARANGO_AGENT_1_CONTAINER_NAME}
+    environment:
+      - ARANGO_ROOT_PASSWORD=${ARANGO_ROOT_PASSWORD}
+    command: >
+      --server.endpoint tcp://0.0.0.0:8530
+      --server.authentication true
+      --server.authentication-system-only false
+      --server.jwt-secret secret
+      --server.statistics false
+      --foxx.queues false
+      --agency.size 5
+      --agency.supervision true
+      --agency.activate true
+      --agency.my-address tcp://arangodb-agency1:8530
+      --log.level info
+      --agency.endpoint tcp://arangodb-agency1:8530
+      --agency.endpoint tcp://arangodb-agency2:8530
+      --agency.endpoint tcp://arangodb-agency3:8530
+      --agency.endpoint tcp://arangodb-agency4:8530
+      --agency.endpoint tcp://arangodb-agency5:8530
+    env_file: ./.env
+    volumes:
+      - ./data/arangodb/agency1:/var/lib/arangodb3/
+ 
+  arangodb-agency2:
+    image: arangodb/arangodb
+    container_name: ${ARANGO_AGENT_2_CONTAINER_NAME}
+    environment:
+      - ARANGO_ROOT_PASSWORD=${ARANGO_ROOT_PASSWORD}
+    command: >
+      --server.endpoint tcp://0.0.0.0:8530
+      --server.authentication true
+      --server.authentication-system-only false
+      --server.jwt-secret secret
+      --server.statistics false
+      --foxx.queues false
+      --agency.size 5
+      --agency.supervision true
+      --agency.activate true
+      --agency.my-address tcp://arangodb-agency2:8530
+      --log.level info
+      --agency.endpoint tcp://arangodb-agency1:8530
+      --agency.endpoint tcp://arangodb-agency2:8530
+      --agency.endpoint tcp://arangodb-agency3:8530
+      --agency.endpoint tcp://arangodb-agency4:8530
+      --agency.endpoint tcp://arangodb-agency5:8530
+    env_file: ./.env
+    volumes:
+      - ./data/arangodb/agency2:/var/lib/arangodb3/
+
+  arangodb-agency3:
+    image: arangodb/arangodb
+    container_name: ${ARANGO_AGENT_3_CONTAINER_NAME}
+    environment:
+      - ARANGO_ROOT_PASSWORD=${ARANGO_ROOT_PASSWORD}
+    command: >
+      --server.endpoint tcp://0.0.0.0:8530
+      --server.authentication true
+      --server.authentication-system-only false
+      --server.jwt-secret secret
+      --server.statistics false
+      --foxx.queues false
+      --agency.size 5
+      --agency.supervision true
+      --agency.activate true
+      --agency.my-address tcp://arangodb-agency3:8530
+      --log.level info
+      --agency.endpoint tcp://arangodb-agency1:8530
+      --agency.endpoint tcp://arangodb-agency2:8530
+      --agency.endpoint tcp://arangodb-agency3:8530
+      --agency.endpoint tcp://arangodb-agency4:8530
+      --agency.endpoint tcp://arangodb-agency5:8530
+    env_file: ./.env
+    volumes:
+      - ./data/arangodb/agency3:/var/lib/arangodb3/
+
+  arangodb-agency4:
+    image: arangodb/arangodb
+    container_name: ${ARANGO_AGENT_4_CONTAINER_NAME}
+    environment:
+      - ARANGO_ROOT_PASSWORD=${ARANGO_ROOT_PASSWORD}
+    command: >
+      --server.authentication true
+      --server.authentication-system-only false
+      --server.jwt-secret secret
+      --server.statistics false
+      --server.endpoint tcp://0.0.0.0:8530
+      --foxx.queues false
+      --agency.size 5
+      --agency.supervision true
+      --agency.activate true
+      --agency.my-address tcp://arangodb-agency4:8530
+      --log.level info
+      --agency.endpoint tcp://arangodb-agency1:8530
+      --agency.endpoint tcp://arangodb-agency2:8530
+      --agency.endpoint tcp://arangodb-agency3:8530
+      --agency.endpoint tcp://arangodb-agency4:8530
+      --agency.endpoint tcp://arangodb-agency5:8530
+    env_file: ./.env
+    volumes:
+      - ./data/arangodb/agency4:/var/lib/arangodb3/
+
+  arangodb-agency5:
+    image: arangodb/arangodb
+    container_name: ${ARANGO_AGENT_5_CONTAINER_NAME}
+    environment:
+      - ARANGO_ROOT_PASSWORD=${ARANGO_ROOT_PASSWORD}
+    command: >
+      --server.authentication true
+      --server.authentication-system-only false
+      --server.jwt-secret secret
+      --server.statistics false
+      --foxx.queues false
+      --agency.size 5
+      --agency.supervision true
+      --agency.activate true
+      --agency.my-address tcp://arangodb-agency5:8530
+      --server.endpoint tcp://0.0.0.0:8530
+      --log.level info
+      --agency.endpoint tcp://arangodb-agency1:8530
+      --agency.endpoint tcp://arangodb-agency2:8530
+      --agency.endpoint tcp://arangodb-agency3:8530
+      --agency.endpoint tcp://arangodb-agency4:8530
+      --agency.endpoint tcp://arangodb-agency5:8530
+    env_file: ./.env
+    volumes:
+      - ./data/arangodb/agency5:/var/lib/arangodb3/
+
+  arangodb-coordinator1:
+    image: arangodb/arangodb
+    container_name: ${ARANGO_COORDINATOR_1_CONTAINER_NAME}
+    environment:
+      - ARANGO_ROOT_PASSWORD=${ARANGO_ROOT_PASSWORD}
+    command: >
+      --server.endpoint tcp://0.0.0.0:8529
+      --server.authentication true
+      --server.authentication-system-only false
+      --server.jwt-secret secret
+      --server.statistics true
+      --foxx.queues true
+      --cluster.agency-endpoint tcp://arangodb-agency1:8530
+      --cluster.agency-endpoint tcp://arangodb-agency2:8530
+      --cluster.agency-endpoint tcp://arangodb-agency3:8530
+      --cluster.agency-endpoint tcp://arangodb-agency4:8530
+      --cluster.agency-endpoint tcp://arangodb-agency5:8530
+      --cluster.my-address tcp://arangodb-coordinator1:8529
+      --cluster.my-local-info COORD1
+      --cluster.my-role COORDINATOR
+      --log.level info     
+    env_file: ./.env
+    volumes:
+      - ./data/arangodb/coordinator1:/var/lib/arangodb3/
+    ports: ['8000:8529']
+
+  arangodb-coordinator2:
+    image: arangodb/arangodb
+    container_name: ${ARANGO_COORDINATOR_2_CONTAINER_NAME}
+    environment:
+      - ARANGO_ROOT_PASSWORD=${ARANGO_ROOT_PASSWORD}
+    command: >
+      --cluster.agency-endpoint tcp://arangodb-agency1:8530
+      --cluster.agency-endpoint tcp://arangodb-agency2:8530
+      --cluster.agency-endpoint tcp://arangodb-agency3:8530
+      --cluster.agency-endpoint tcp://arangodb-agency4:8530
+      --cluster.agency-endpoint tcp://arangodb-agency5:8530
+      --cluster.my-address tcp://arangodb-coordinator2:8529
+      --server.endpoint tcp://0.0.0.0:8529
+      --server.authentication true
+      --server.authentication-system-only false
+      --server.jwt-secret secret
+      --server.statistics true
+      --foxx.queues true
+      --cluster.my-local-info COORD2
+      --cluster.my-role COORDINATOR
+      --log.level info
+    env_file: ./.env
+    volumes:
+      - ./data/arangodb/coordinator2:/var/lib/arangodb3/
+
+  arangodb-coordinator3:
+    image: arangodb/arangodb
+    container_name: ${ARANGO_COORDINATOR_3_CONTAINER_NAME}
+    environment:
+      - ARANGO_ROOT_PASSWORD=${ARANGO_ROOT_PASSWORD}
+    command: >
+      --server.endpoint tcp://0.0.0.0:8529
+      --server.authentication true
+      --server.authentication-system-only false
+      --server.jwt-secret secret
+      --server.statistics true
+      --foxx.queues true
+      --cluster.agency-endpoint tcp://arangodb-agency1:8530
+      --cluster.agency-endpoint tcp://arangodb-agency2:8530
+      --cluster.agency-endpoint tcp://arangodb-agency3:8530
+      --cluster.agency-endpoint tcp://arangodb-agency4:8530
+      --cluster.agency-endpoint tcp://arangodb-agency5:8530
+      --cluster.my-address tcp://arangodb-coordinator3:8529
+      --cluster.my-local-info COORD3
+      --cluster.my-role COORDINATOR
+      --log.level info    
+    env_file: ./.env
+    volumes:
+      - ./data/arangodb/coordinator3:/var/lib/arangodb3/
+    ports: ['8001:8529']
+    
+  arangodb-coordinator4:
+    image: arangodb/arangodb
+    container_name: ${ARANGO_COORDINATOR_4_CONTAINER_NAME}
+    environment:
+      - ARANGO_ROOT_PASSWORD=${ARANGO_ROOT_PASSWORD}
+    command: >
+      --server.endpoint tcp://0.0.0.0:8529
+      --server.authentication true
+      --server.authentication-system-only false
+      --server.jwt-secret secret
+      --server.statistics true
+      --foxx.queues true
+      --cluster.agency-endpoint tcp://arangodb-agency1:8530
+      --cluster.agency-endpoint tcp://arangodb-agency2:8530
+      --cluster.agency-endpoint tcp://arangodb-agency3:8530
+      --cluster.agency-endpoint tcp://arangodb-agency4:8530
+      --cluster.agency-endpoint tcp://arangodb-agency5:8530
+      --cluster.my-address tcp://arangodb-coordinator4:8529
+      --cluster.my-local-info COORD4
+      --cluster.my-role COORDINATOR
+      --log.level info     
+    env_file: ./.env
+    volumes:
+      - ./data/arangodb/coordinator4:/var/lib/arangodb3/
+    ports: ['8002:8529'] 
+    
+  arangodb-dbserver1:
+    image: arangodb/arangodb
+    container_name: ${ARANGO_DB_1_CONTAINER_NAME}
+    environment:
+      - ARANGO_ROOT_PASSWORD=${ARANGO_ROOT_PASSWORD}
+    command: >
+      --server.endpoint tcp://0.0.0.0:8529
+      --server.authentication true
+      --server.authentication-system-only false
+      --server.jwt-secret secret
+      --server.statistics true
+      --foxx.queues false
+      --cluster.agency-endpoint tcp://arangodb-agency1:8530
+      --cluster.agency-endpoint tcp://arangodb-agency2:8530
+      --cluster.agency-endpoint tcp://arangodb-agency3:8530
+      --cluster.agency-endpoint tcp://arangodb-agency4:8530
+      --cluster.agency-endpoint tcp://arangodb-agency5:8530
+      --cluster.my-address tcp://arangodb-dbserver1:8529
+      --cluster.my-local-info DB1
+      --cluster.my-role PRIMARY
+      --log.level info
+    env_file: ./.env
+    volumes:
+      - ./data/arangodb/dbserver1:/var/lib/arangodb3/
+
+  arangodb-dbserver2:
+    image: arangodb/arangodb
+    container_name: ${ARANGO_DB_2_CONTAINER_NAME}
+    environment:
+      - ARANGO_ROOT_PASSWORD=${ARANGO_ROOT_PASSWORD}
+    command: >
+      --cluster.agency-endpoint tcp://arangodb-agency1:8530
+      --cluster.agency-endpoint tcp://arangodb-agency2:8530
+      --cluster.agency-endpoint tcp://arangodb-agency3:8530
+      --cluster.agency-endpoint tcp://arangodb-agency4:8530
+      --cluster.agency-endpoint tcp://arangodb-agency5:8530
+      --cluster.my-address tcp://arangodb-dbserver2:8529
+      --server.endpoint tcp://0.0.0.0:8529
+      --server.authentication true
+      --server.authentication-system-only false
+      --server.jwt-secret secret
+      --server.statistics true
+      --foxx.queues false
+      --cluster.my-local-info HAVDB1
+      --cluster.my-role PRIMARY
+      --log.level info
+    env_file: ./.env
+    volumes:
+      - ./data/arangodb/dbserver2:/var/lib/arangodb3/
+
+  arangodb-dbserver3:
+    image: arangodb/arangodb
+    container_name: ${ARANGO_DB_3_CONTAINER_NAME}
+    environment:
+      - ARANGO_ROOT_PASSWORD=${ARANGO_ROOT_PASSWORD}
+    command: >
+      --cluster.agency-endpoint tcp://arangodb-agency1:8530
+      --cluster.agency-endpoint tcp://arangodb-agency2:8530
+      --cluster.agency-endpoint tcp://arangodb-agency3:8530
+      --cluster.agency-endpoint tcp://arangodb-agency4:8530
+      --cluster.agency-endpoint tcp://arangodb-agency5:8530
+      --cluster.my-address tcp://arangodb-dbserver3:8529
+      --server.endpoint tcp://0.0.0.0:8529
+      --server.authentication true
+      --server.authentication-system-only false
+      --server.jwt-secret secret
+      --server.statistics true
+      --foxx.queues false
+      --cluster.my-local-info HAVDB2
+      --cluster.my-role PRIMARY
+      --log.level info
+    env_file: ./.env
+    volumes:
+      - ./data/arangodb/dbserver3:/var/lib/arangodb3/
+ 
+  arangodb-dbserver4:
+    image: arangodb/arangodb
+    container_name: ${ARANGO_DB_4_CONTAINER_NAME}
+    environment:
+      - ARANGO_ROOT_PASSWORD=${ARANGO_ROOT_PASSWORD}
+    command: >
+      --cluster.agency-endpoint tcp://arangodb-agency1:8530
+      --cluster.agency-endpoint tcp://arangodb-agency2:8530
+      --cluster.agency-endpoint tcp://arangodb-agency3:8530
+      --cluster.agency-endpoint tcp://arangodb-agency4:8530
+      --cluster.agency-endpoint tcp://arangodb-agency5:8530
+      --cluster.my-address tcp://arangodb-dbserver4:8529
+      --server.endpoint tcp://0.0.0.0:8529
+      --server.authentication true
+      --server.authentication-system-only false
+      --server.jwt-secret secret
+      --server.statistics true
+      --foxx.queues false
+      --cluster.my-local-info HAVDB3
+      --cluster.my-role PRIMARY
+      --log.level info
+    env_file: ./.env
+    volumes:
+      - ./data/arangodb/dbserver4:/var/lib/arangodb3/
+
+networks:
+  default:
+    name: asset_analyzer_network
+    driver: bridge
+    

@@ -1,0 +1,98 @@
+version: "3.8"
+
+services:
+
+  dolphinscheduler-schema-initializer:
+    image: ${DOLPHIN_SCHEDULER_HUB}/dolphinscheduler-tools:${DOLPHIN_SCHEDULER_TAG}
+    container_name: dolphinscheduler-schema-initializer
+    env_file: ./.env
+    # profiles: ["schema"]
+    command: [ tools/bin/upgrade-schema.sh ]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./data/dolphinscheduler/logs:/opt/dolphinscheduler/logs
+      - ./data/dolphinscheduler/shared-local:/opt/soft
+      - ./data/dolphinscheduler/resource-local:/dolphinscheduler
+
+  dolphinscheduler-api:
+    image: ${DOLPHIN_SCHEDULER_HUB}/dolphinscheduler-api:${DOLPHIN_SCHEDULER_TAG}
+    container_name: dolphinscheduler-api
+    ports:
+      - "${DOLPHIN_SCHEDULER_API_PUBLIC_PORT_1}:${DOLPHIN_SCHEDULER_API_PORT_1}"
+      - "${DOLPHIN_SCHEDULER_API_PUBLIC_PORT_2}:${DOLPHIN_SCHEDULER_API_PORT_2}"
+    # profiles: ["all"]
+    env_file: ./.env
+    healthcheck:
+      test: [ "CMD", "curl", "http://localhost:${DOLPHIN_SCHEDULER_API_PUBLIC_PORT_1}/dolphinscheduler/actuator/health" ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    depends_on:
+      zoo1:
+        condition: service_healthy
+      zoo2:
+        condition: service_healthy
+    volumes:
+      - ./data/dolphinscheduler/logs:/opt/dolphinscheduler/logs
+      - ./data/dolphinscheduler/shared-local:/opt/soft
+      - ./data/dolphinscheduler/resource-local:/dolphinscheduler
+
+  dolphinscheduler-alert:
+    image: ${DOLPHIN_SCHEDULER_HUB}/dolphinscheduler-alert-server:${DOLPHIN_SCHEDULER_TAG}
+    container_name: dolphinscheduler-alert
+    # profiles: ["all"]
+    env_file: .env
+    healthcheck:
+      test: [ "CMD", "curl", "http://localhost:${DOLPHIN_SCHEDULER_ALERT_PUBLIC_PORT}/actuator/health" ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    volumes:
+      - ./data/dolphinscheduler/logs:/opt/dolphinscheduler/logs
+
+  dolphinscheduler-master:
+    image: ${DOLPHIN_SCHEDULER_HUB}/dolphinscheduler-master:${DOLPHIN_SCHEDULER_TAG}
+    container_name: dolphinscheduler-master
+    # profiles: ["all"]
+    env_file: .env
+    healthcheck:
+      test: [ "CMD", "curl", "http://localhost:5679/actuator/health" ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    depends_on:
+      zoo1:
+        condition: service_healthy
+      zoo2:
+        condition: service_healthy
+    volumes:
+      - ./data/dolphinscheduler/logs:/opt/dolphinscheduler/logs
+      - ./data/dolphinscheduler/shared-local:/opt/soft
+
+  dolphinscheduler-worker:
+    image: ${DOLPHIN_SCHEDULER_HUB}/dolphinscheduler-worker:${DOLPHIN_SCHEDULER_TAG}
+    container_name: dolpdolphinscheduler-worker
+    # profiles: ["all"]
+    env_file: .env
+    healthcheck:
+      test: [ "CMD", "curl", "http://localhost:${DOLPHIN_SCHEDULER_WORKER_PUBLIC_PORT}/actuator/health" ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    depends_on:
+      zoo1:
+        condition: service_healthy
+      zoo2:
+        condition: service_healthy
+    volumes:
+      - ./data/dolphinscheduler/worker-data:/tmp/dolphinscheduler
+      - ./data/dolphinscheduler/logs:/opt/dolphinscheduler/logs
+      - ./data/dolphinscheduler/shared-local:/opt/soft
+      - ./data/dolphinscheduler/resource-local:/dolphinscheduler
+
+networks:
+  default:
+    name: asset_analyzer_network
+    driver: bridge

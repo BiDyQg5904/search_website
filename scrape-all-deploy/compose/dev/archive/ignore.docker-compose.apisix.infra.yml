@@ -1,0 +1,95 @@
+version: "3"
+
+services:
+  apisix-dashboard:
+    image: apache/apisix-dashboard:2.15.0-alpine
+    container_name: ${APISIX_DASHBOARD_CONTAINER_NAME}
+    restart: always
+    volumes:
+      - ./conf/apisix_dashboard_conf/conf.yaml:/usr/local/apisix-dashboard/conf/conf.yaml
+    ports:
+      - "${APISIX_DASHBOARD_PUBLIC_PORT}:${APISIX_DASHBOARD_PORT}"
+    env_file: ./.env
+
+  apisix:
+    image: apache/apisix:latest
+    container_name: ${APISIX_CONTAINER_NAME}
+    restart: always
+    volumes:
+      - ./conf/apisix_log:/usr/local/apisix/logs
+      - ./conf/apisix_conf/config.yaml:/usr/local/apisix/conf/config.yaml:ro
+    depends_on:
+      - etcd
+    ##network_mode: host
+    ports:
+      - "${APISIX_PUBLIC_PORT_1}:${APISIX_INTERNAL_PORT_1}"
+      - "${APISIX_PUBLIC_PORT_2}:${APISIX_INTERNAL_PORT_2}"
+      - "${APISIX_PUBLIC_PORT_3}:${APISIX_INTERNAL_PORT_3}"
+      - "${APISIX_PUBLIC_PORT_4}:${APISIX_INTERNAL_PORT_4}"
+      - "${APISIX_PUBLIC_PORT_5}:${APISIX_INTERNAL_PORT_5}"
+    env_file: ./.env
+
+  etcd:
+    image: bitnami/etcd:3.4.15
+    container_name: ${ETCD_CONTAINER_NAME}
+    restart: always
+    volumes:
+      - ./data/etcd_data:/bitnami/etcd
+    environment:
+      ETCD_ENABLE_V2: ${ETCD_ENABLE_V2}
+      ALLOW_NONE_AUTHENTICATION: "yes"
+      ETCD_ADVERTISE_CLIENT_URLS: ${ETCD_ADVERTISE_CLIENT_URLS}
+      ETCD_LISTEN_CLIENT_URLS: ${ETCD_LISTEN_CLIENT_URLS}
+    ports:
+      - "${ETCD_PUBLIC_PORT}:${ETCD_INTERNAL_PORT}"
+    env_file: ./.env
+
+  # web1:
+  #   image: nginx:1.19.0-alpine
+  #   restart: always
+  #   volumes:
+  #     - ./conf/upstream/web1.conf:/etc/nginx/nginx.conf
+  #   ports:
+  #     - "9081:80/tcp"
+  #   environment:
+  #     - NGINX_PORT=80
+
+  # web2:
+  #   image: nginx:1.19.0-alpine
+  #   restart: always
+  #   volumes:
+  #     - ./conf/upstream/web2.conf:/etc/nginx/nginx.conf
+  #   ports:
+  #     - "9082:80/tcp"
+  #   environment:
+  #     - NGINX_PORT=80
+
+  prometheus:
+    image: prom/prometheus:v2.25.0
+    container_name: ${PROMETHEUS_CONTAINER_NAME}
+    restart: always
+    volumes:
+      - ./conf/prometheus_conf/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./data/prometheus/:/etc/prometheus/
+      - ./data/prometheus/data:/prometheus
+    ports:
+      - "${PROMETHEUS_PUBLIC_PORT}:${PROMETHEUS_INTERNAL_PORT}"
+    env_file: ./.env
+
+  grafana:
+    image: grafana/grafana:7.3.7
+    container_name: ${GRAFANA_CONTAINER_NAME}
+    restart: always
+    ports:
+      - "${GRAFANA_PUBLIC_PORT}:${GRAFANA_INTERNAL_PORT}"
+    volumes:
+      - ./conf/grafana_conf/provisioning:/etc/grafana/provisioning
+      - ./conf/grafana_conf/dashboards:/var/lib/grafana/dashboards
+      - ./conf/grafana_conf/config/grafana.ini:/etc/grafana/grafana.ini
+      - ./data/grafana/data:/var/lib/grafana
+      - ./data/grafana/provisioning/:/etc/grafana/provisioning/
+    env_file: ./.env
+
+networks:
+  asset_analyzer_network:
+    driver: bridge

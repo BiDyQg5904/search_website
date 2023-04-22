@@ -1,0 +1,415 @@
+version: '3.4'
+services:
+
+  nebula-graph-metad0:
+    image: vesoft/nebula-metad:nightly
+    environment:
+      USER: root
+      TZ:   "${TZ}"
+    command:
+      - --meta_server_addrs=nebula-graph-metad0:${NEBULA_GRAPH_METAD0_PORT_1},nebula-graph-metad1:${NEBULA_GRAPH_METAD1_PORT_1},nebula-graph-metad2:${NEBULA_GRAPH_METAD2_PORT_1}
+      - --local_ip=nebula-graph-metad0
+      - --ws_ip=nebula-graph-metad0
+      - --port=${NEBULA_GRAPH_METAD0_PORT_1}
+      - --ws_http_port=${NEBULA_GRAPH_METAD0_PORT_2}
+      - --data_path=/data/meta
+      - --log_dir=/logs
+      - --v=0
+      - --minloglevel=0
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://nebula-graph-metad0:${NEBULA_GRAPH_METAD0_PORT_2}/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    ports:
+      - ${NEBULA_GRAPH_METAD0_PORT_1}
+      - ${NEBULA_GRAPH_METAD0_PORT_2}
+      - ${NEBULA_GRAPH_METAD0_PORT_3}
+    volumes:
+      - ./data/nebula-graph/data/meta0:/data/meta
+      - ./data/nebula-graph/logs/meta0:/logs
+    networks:
+      - asset_analyzer_network
+    restart: on-failure
+    cap_add:
+      - SYS_PTRACE
+
+  nebula-graph-metad1:
+    image: vesoft/nebula-metad:nightly
+    environment:
+      USER: root
+      TZ:   "${TZ}"
+    command:
+      - --meta_server_addrs=nebula-graph-metad0:${NEBULA_GRAPH_METAD0_PORT_1},nebula-graph-metad1:${NEBULA_GRAPH_METAD1_PORT_1},nebula-graph-metad2:${NEBULA_GRAPH_METAD2_PORT_1}
+      - --local_ip=nebula-graph-metad1
+      - --ws_ip=nebula-graph-metad1
+      - --port=${NEBULA_GRAPH_METAD1_PORT_1}
+      - --ws_http_port=${NEBULA_GRAPH_METAD1_PORT_2}
+      - --data_path=/data/meta
+      - --log_dir=/logs
+      - --v=0
+      - --minloglevel=0
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://nebula-graph-metad1:${NEBULA_GRAPH_METAD0_PORT_2}/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    ports:
+      - ${NEBULA_GRAPH_METAD0_PORT_1}
+      - ${NEBULA_GRAPH_METAD0_PORT_2}
+      - ${NEBULA_GRAPH_METAD0_PORT_3}
+    volumes:
+      - ./data/nebula-graph/data/meta1:/data/meta
+      - ./data/nebula-graph/logs/meta1:/logs
+    networks:
+      - asset_analyzer_network
+    restart: on-failure
+    cap_add:
+      - SYS_PTRACE
+
+  nebula-graph-metad2:
+    image: vesoft/nebula-metad:nightly
+    environment:
+      USER: root
+      TZ:   "${TZ}"
+    command:
+      - --meta_server_addrs=nebula-graph-metad0:${NEBULA_GRAPH_METAD0_PORT_1},nebula-graph-metad1:${NEBULA_GRAPH_METAD1_PORT_1},nebula-graph-metad2:${NEBULA_GRAPH_METAD2_PORT_1}
+      - --local_ip=nebula-graph-metad2
+      - --ws_ip=nebula-graph-metad2
+      - --port=${NEBULA_GRAPH_METAD2_PORT_1}
+      - --ws_http_port=${NEBULA_GRAPH_METAD2_PORT_2}
+      - --data_path=/data/meta
+      - --log_dir=/logs
+      - --v=0
+      - --minloglevel=0
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://nebula-graph-metad2:${NEBULA_GRAPH_METAD2_PORT_2}/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    ports:
+      - ${NEBULA_GRAPH_METAD0_PORT_1}
+      - ${NEBULA_GRAPH_METAD0_PORT_2}
+      - ${NEBULA_GRAPH_METAD0_PORT_3}
+    volumes:
+      - ./data/nebula-graph/data/meta2:/data/meta
+      - ./data/nebula-graph/logs/meta2:/logs
+    networks:
+      - asset_analyzer_network
+    restart: on-failure
+    cap_add:
+      - SYS_PTRACE
+
+  nebula-graph-storaged0:
+    image: vesoft/nebula-storaged:nightly
+    environment:
+      USER: root
+      TZ:   "${TZ}"
+    command:
+      - --meta_server_addrs=nebula-graph-metad0:${NEBULA_GRAPH_METAD0_PORT_1},nebula-graph-metad1:${NEBULA_GRAPH_METAD1_PORT_1},nebula-graph-metad2:${NEBULA_GRAPH_METAD2_PORT_1}
+      - --local_ip=nebula-graph-storaged0
+      - --ws_ip=nebula-graph-storaged0
+      - --port=${NEBULA_GRAPH_STORAGE0_PORT_1}
+      - --ws_http_port=${NEBULA_GRAPH_STORAGE0_PORT_2}
+      - --data_path=/data/storage
+      - --log_dir=/logs
+      - --v=0
+      - --minloglevel=0
+    depends_on:
+      - nebula-graph-metad0
+      - nebula-graph-metad1
+      - nebula-graph-metad2
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://nebula-graph-storaged0:${NEBULA_GRAPH_STORAGE0_PORT_2}/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    ports:
+      - ${NEBULA_GRAPH_STORAGE0_PORT_1}
+      - ${NEBULA_GRAPH_STORAGE0_PORT_2}
+      - ${NEBULA_GRAPH_STORAGE0_PORT_3}
+    volumes:
+      - ./data/nebula-graph/data/storage0:/data/storage
+      - ./data/nebula-graph/logs/storage0:/logs
+    networks:
+      - asset_analyzer_network
+    restart: on-failure
+    cap_add:
+      - SYS_PTRACE
+
+  nebula-graph-storaged1:
+    image: vesoft/nebula-storaged:nightly
+    environment:
+      USER: root
+      TZ:   "${TZ}"
+    command:
+      - --meta_server_addrs=nebula-graph-metad0:${NEBULA_GRAPH_METAD0_PORT_1},nebula-graph-metad1:${NEBULA_GRAPH_METAD1_PORT_1},nebula-graph-metad2:${NEBULA_GRAPH_METAD2_PORT_1}
+      - --local_ip=nebula-graph-storaged1
+      - --ws_ip=nebula-graph-storaged1
+      - --port=${NEBULA_GRAPH_STORAGE1_PORT_1}
+      - --ws_http_port=${NEBULA_GRAPH_STORAGE1_PORT_2}
+      - --data_path=/data/storage
+      - --log_dir=/logs
+      - --v=0
+      - --minloglevel=0
+    depends_on:
+      - nebula-graph-metad0
+      - nebula-graph-metad1
+      - nebula-graph-metad2
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://nebula-graph-storaged1:${NEBULA_GRAPH_STORAGE0_PORT_2}/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    ports:
+      - ${NEBULA_GRAPH_STORAGE0_PORT_1}
+      - ${NEBULA_GRAPH_STORAGE0_PORT_2}
+      - ${NEBULA_GRAPH_STORAGE0_PORT_3}
+    volumes:
+      - ./data/nebula-graph/data/storage1:/data/storage
+      - ./data/nebula-graph/logs/storage1:/logs
+    networks:
+      - asset_analyzer_network
+    restart: on-failure
+    cap_add:
+      - SYS_PTRACE
+
+  nebula-graph-storaged2:
+    image: vesoft/nebula-storaged:nightly
+    environment:
+      USER: root
+      TZ:   "${TZ}"
+    command:
+      - --meta_server_addrs=nebula-graph-metad0:${NEBULA_GRAPH_METAD0_PORT_1},nebula-graph-metad1:${NEBULA_GRAPH_METAD1_PORT_1},nebula-graph-metad2:${NEBULA_GRAPH_METAD2_PORT_1}
+      - --local_ip=nebula-graph-storaged2
+      - --ws_ip=nebula-graph-storaged2
+      - --port=${NEBULA_GRAPH_STORAGE2_PORT_1}
+      - --ws_http_port=${NEBULA_GRAPH_STORAGE2_PORT_2}
+      - --data_path=/data/storage
+      - --log_dir=/logs
+      - --v=0
+      - --minloglevel=0
+    depends_on:
+      - nebula-graph-metad0
+      - nebula-graph-metad1
+      - nebula-graph-metad2
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://nebula-graph-storaged2:${NEBULA_GRAPH_STORAGE0_PORT_2}/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    ports:
+      - ${NEBULA_GRAPH_STORAGE0_PORT_1}
+      - ${NEBULA_GRAPH_STORAGE0_PORT_2}
+      - ${NEBULA_GRAPH_STORAGE0_PORT_3}
+    volumes:
+      - ./data/nebula-graph/data/storage2:/data/storage
+      - ./data/nebula-graph/logs/storage2:/logs
+    networks:
+      - asset_analyzer_network
+    restart: on-failure
+    cap_add:
+      - SYS_PTRACE
+
+  nebula-graph-graphd:
+    image: vesoft/nebula-graphd:nightly
+    environment:
+      USER: root
+      TZ:   "${TZ}"
+    command:
+      - --meta_server_addrs=nebula-graph-metad0:${NEBULA_GRAPH_METAD0_PORT_1},nebula-graph-metad1:${NEBULA_GRAPH_METAD1_PORT_1},nebula-graph-metad2:${NEBULA_GRAPH_METAD2_PORT_1}
+      - --port=${NEBULA_GRAPH_GRAPHD_PORT_1}
+      - --local_ip=nebula-graph-graphd
+      - --ws_ip=nebula-graph-graphd
+      - --ws_http_port=${NEBULA_GRAPH_GRAPHD_PORT_2}
+      - --log_dir=/logs
+      - --v=0
+      - --minloglevel=0
+    depends_on:
+      - nebula-graph-storaged0
+      - nebula-graph-storaged1
+      - nebula-graph-storaged2
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://nebula-graph-graphd:${NEBULA_GRAPH_GRAPHD_PORT_2}/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    ports:
+      - "${NEBULA_GRAPH_GRAPHD_PORT_1}:${NEBULA_GRAPH_GRAPHD_PORT_1}"
+      - ${NEBULA_GRAPH_GRAPHD_PORT_2}
+      - ${NEBULA_GRAPH_GRAPHD_PORT_3}
+    volumes:
+      - ./data/nebula-graph/logs/graph:/logs
+    networks:
+      - asset_analyzer_network
+    restart: on-failure
+    cap_add:
+      - SYS_PTRACE
+
+  nebula-graph-graphd1:
+    image: vesoft/nebula-graphd:nightly
+    environment:
+      USER: root
+      TZ:   "${TZ}"
+    command:
+      - --meta_server_addrs=nebula-graph-metad0:${NEBULA_GRAPH_METAD0_PORT_1},nebula-graph-metad1:${NEBULA_GRAPH_METAD1_PORT_1},nebula-graph-metad2:${NEBULA_GRAPH_METAD2_PORT_1}
+      - --port=${NEBULA_GRAPH_GRAPHD1_PORT_1}
+      - --local_ip=nebula-graph-graphd1
+      - --ws_ip=nebula-graph-graphd1
+      - --ws_http_port=${NEBULA_GRAPH_GRAPHD1_PORT_2}
+      - --log_dir=/logs
+      - --v=0
+      - --minloglevel=0
+    depends_on:
+      - nebula-graph-storaged0
+      - nebula-graph-storaged1
+      - nebula-graph-storaged2
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://nebula-graph-graphd1:${NEBULA_GRAPH_GRAPHD1_PORT_2}/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    ports:
+      - ${NEBULA_GRAPH_GRAPHD1_PORT_1}
+      - ${NEBULA_GRAPH_GRAPHD1_PORT_2}
+      - ${NEBULA_GRAPH_GRAPHD1_PORT_3}
+    volumes:
+      - ./data/nebula-graph/logs/graph1:/logs
+    networks:
+      - asset_analyzer_network
+    restart: on-failure
+    cap_add:
+      - SYS_PTRACE
+
+  nebula-graph-graphd2:
+    image: vesoft/nebula-graphd:nightly
+    environment:
+      USER: root
+      TZ:   "${TZ}"
+    command:
+      - --meta_server_addrs=nebula-graph-metad0:${NEBULA_GRAPH_METAD0_PORT_1},nebula-graph-metad1:${NEBULA_GRAPH_METAD1_PORT_1},nebula-graph-metad2:${NEBULA_GRAPH_METAD2_PORT_1}
+      - --port=${NEBULA_GRAPH_GRAPHD2_PORT_1}
+      - --local_ip=nebula-graph-graphd2
+      - --ws_ip=nebula-graph-graphd2
+      - --ws_http_port=${NEBULA_GRAPH_GRAPHD2_PORT_2}
+      - --log_dir=/logs
+      - --v=0
+      - --minloglevel=0
+    depends_on:
+      - nebula-graph-storaged0
+      - nebula-graph-storaged1
+      - nebula-graph-storaged2
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://nebula-graph-graphd2:${NEBULA_GRAPH_GRAPHD2_PORT_2}/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    ports:
+      - ${NEBULA_GRAPH_GRAPHD2_PORT_1}
+      - ${NEBULA_GRAPH_GRAPHD2_PORT_2}
+      - ${NEBULA_GRAPH_GRAPHD2_PORT_3}
+    volumes:
+      - ./data/nebula-graph/logs/graph2:/logs
+    networks:
+      - asset_analyzer_network
+    restart: on-failure
+    cap_add:
+      - SYS_PTRACE
+  
+  nebula-graph-console:
+    image: vesoft/nebula-console:nightly
+    entrypoint: ""
+    command: 
+      - sh
+      - -c
+      - |
+        for i in `seq 1 60`;do
+          var=`nebula-console -addr nebula-graph-graphd -port ${NEBULA_GRAPH_GRAPHD_PORT_1} -u root -p nebula -e 'ADD HOSTS "nebula-graph-storaged0":${NEBULA_GRAPH_STORAGE0_PORT_1},"nebula-graph-storaged1":${NEBULA_GRAPH_STORAGE1_PORT_1},"nebula-graph-storaged2":${NEBULA_GRAPH_STORAGE2_PORT_1}'`;
+          if [[ $$? == 0 ]];then
+            break;
+          fi;
+          sleep 1;
+          echo "retry to add hosts.";
+        done && tail -f /dev/null;
+    depends_on:
+      - nebula-graph-graphd
+    networks:
+      - asset_analyzer_network
+
+  nebula-graph-studio:
+    image: vesoft/nebula-graph-studio:v3.5.1
+    environment:
+      USER: root
+    ports:
+      - ${NEBULA_GRAPH_STUDIO_PUBLIC_PORT}:${NEBULA_GRAPH_STUDIO_INTERNAL_PORT}
+    networks:
+      - asset_analyzer_network
+
+  # nebula-graph-node-exporter:
+  #   image: quay.io/prometheus/node-exporter:latest
+  #   # container_name: node_exporter
+  #   command:
+  #     - '--path.rootfs=/host'
+  #   network_mode: host
+  #   pid: host
+  #   # restart: unless-stopped
+  #   volumes:
+  #     - './data/nebula-graph/data/nebula-graph/node-exporter:/host:ro,rslave'
+  #   networks:
+  #     - asset_analyzer_network
+
+  nebula-graph-client:
+    image: vesoft/nebula-http-gateway:3.4.0
+    environment:
+      USER: ${NEBULA_GRAPH_CLIENT_USER}
+    ports:
+      - ${NEBULA_GRAPH_CLIENT_PUBLIC_PORT}:${NEBULA_GRAPH_CLIENT_INTERNAL_PORT}
+    networks:
+      - asset_analyzer_network
+
+  # nebula-graph-importer:
+  #   image: vesoft/nebula-importer:v3.4.0
+  #   networks:
+  #     - asset_analyzer_network
+  #   ports:
+  #     - ${NEBULA_GRAPH_IMPORTER_PORT_1}
+  #   volumes:
+  #     - ./data/nebula-graph/data/nebula-graph/importer:rw
+  #   command:
+  #     - "--port=${NEBULA_GRAPH_IMPORTER_PORT_1}"
+  #     - "--callback=http://nebula-graph-studio:${NEBULA_GRAPH_STUDIO_PUBLIC_PORT}/api/import/finish"
+
+  # nebula-dashboard:
+  #   restart: always
+  #   build: .
+  #   ports:
+  #     - 7003:7003
+  #     - 8090:8090
+  #     - 9200:9200
+  #     - 9090:9090
+  #   working_dir: /dashboard
+  #   volumes:
+  #     - ../conf/nebula-graph/dashboard/config.yaml:/dashboard/config.yaml
+  #     - ./vendors/prometheus/data:/dashboard/vendors/prometheus/data
+  #     - ./vendors/prometheus/prometheus.yml:/dashboard/vendors/prometheus/prometheus.yml
+  #     - ./vendors/nebula-stats-exporter/config.yaml:/dashboard/vendors/nebula-stats-exporter/config.yaml
+  #     - ./logs:/dashoard/logs
+  #   command:
+  #     - sh
+  #     - -c
+  #     - |
+  #       ./dashboard.service start all;
+  #       tail -f ./data/nebula-graph/logs/webserver.log
+  #   environment:
+  #     USER: root
+  #   networks:
+  #     - asset_analyzer_network

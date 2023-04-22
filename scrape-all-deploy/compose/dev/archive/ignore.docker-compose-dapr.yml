@@ -1,0 +1,89 @@
+version: "3.7"
+
+x-logging: &default-logging
+  driver: "fluentd"
+  options:
+    fluentd-address: "localhost:24224"
+    fluentd-async-connect: "true"
+    tag: "{{.Name}}-{{.ID}}"
+
+services:
+  # analytic_server:
+  #   build:
+  #     context: ../../../analytic_server/code
+  #     dockerfile: Dockerfile
+  #   container_name: analytic_server
+  #   env_file:
+  #     - ./.env
+  #     - ../../../analytic_server/data/.env.development
+  #   ports:
+  #     - "${ANALYTIC_SERVER_PUBLIC_PORT}:${ANALYTIC_SERVER_PORT}"
+  #   logging: *default-logging
+
+  # analytic_server_dapr:
+  #   image: "daprio/daprd:1.2.2"
+  #   command:
+  #     [
+  #       "./daprd",
+  #       "-app-id",
+  #       "analytic_server",
+  #       "-app-port",
+  #       "8001",
+  #       "-config",
+  #       "/dapr/config.yaml",
+  #       "-components-path",
+  #       "/dapr/local",
+  #     ]
+  #   volumes:
+  #     - "./components:/dapr"      
+  #   depends_on:
+  #     - analytic_server
+  #   network_mode: "service:analytic_server"
+  #   env_file:
+  #     - ./.env
+  #   logging: *default-logging
+
+  worker_server:
+    build:
+      context: ../../../worker/code
+      dockerfile: Dockerfile
+    env_file:
+      - ./.env
+      - ../../../worker/data/.env.development
+    ports:
+      - "${WORKER_SERVER_PUBLIC_PORT}:${WORKER_SERVER_PORT}"
+    logging: *default-logging
+    deploy:
+      mode: replicated
+      replicas: 3
+
+  worker_server_dapr:
+    image: "daprio/daprd:1.2.2"
+    command:
+      [
+        "./daprd",
+        "-app-id",
+        "worker_server",
+        "-app-port",
+        "80",
+        "-config",
+        "/dapr/config.yaml",
+        "-components-path",
+        "/dapr/local",
+      ]
+    volumes:
+      - "./components:/dapr"
+    depends_on:
+      - worker_server
+    network_mode: "service:worker_server"
+    env_file:
+      - ./.env
+    logging: *default-logging
+    deploy:
+      mode: replicated
+      replicas: 3
+
+networks:
+  default:
+    name: asset_analyzer_network
+    external: true

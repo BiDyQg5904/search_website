@@ -1,0 +1,8 @@
+version: "3.7"
+
+networks:
+  asset_analyzer_network: 
+    name: asset_analyzer_network
+  default:
+    name: asset_analyzer_network
+    driver: bridge

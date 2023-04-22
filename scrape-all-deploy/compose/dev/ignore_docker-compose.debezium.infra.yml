@@ -1,0 +1,31 @@
+version: '3.9'
+
+services:
+
+  debezium-connect:
+    image: debezium/connect:2.2
+    ports:
+      - "${DEBEZIUM_CONNECT_PUBLIC_PORT_1}:${DEBEZIUM_CONNECT_INTERNAL_PORT_1}"
+      - "${DEBEZIUM_CONNECT_PUBLIC_PORT_2}:${DEBEZIUM_CONNECT_INTERNAL_PORT_2}"
+    environment:
+      BOOTSTRAP_SERVERS: ${DEBEZIUM_CONNECT_BOOTSTRAP_SERVERS}
+      GROUP_ID: ${DEBEZIUM_CONNECT_GROUP_ID}
+      CONFIG_STORAGE_TOPIC: ${DEBEZIUM_CONNECT_CONFIG_STORAGE_TOPIC}
+      OFFSET_STORAGE_TOPIC: ${DEBEZIUM_CONNECT_OFFSET_STORAGE_TOPIC}
+      STATUS_STORAGE_TOPIC: ${DEBEZIUM_CONNECT_STATUS_STORAGE_TOPIC}
+      # KEY_CONVERTER: ${DEBEZIUM_CONNECT_KEY_CONVERTER}
+      # VALUE_CONVERTER: ${DEBEZIUM_CONNECT_VALUE_CONVERTER}
+      CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL: ${DEBEZIUM_CONNECT_CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL}
+      CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: ${DEBEZIUM_CONNECT_CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL}
+    depends_on:
+      - kafka0
+    links:
+      - kafka0:kafka
+    volumes:
+      - ./ssl/kafka/truststore/kafka.truststore.jks:/kafka.truststore.jks
+      - ./ssl/kafka/keystore/kafka.keystore.jks:/kafka.keystore.jks
+    networks:
+      - asset_analyzer_network
+    # extra_hosts:
+    #   - "host.docker.internal:host-gateway"
+    

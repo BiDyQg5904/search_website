@@ -1,0 +1,41 @@
+version: '2.1'
+
+services: 
+  nocodb: 
+    container_name: nocodb
+    depends_on: 
+      nocodb-db: 
+        condition: service_healthy
+    environment: 
+      NC_DB: ${NOCODB_DB_CONNECTION_PATH}
+    image: "nocodb/nocodb:latest"
+    ports: 
+      - "${NOCODB_PUBLIC_PORT}:${NOCODB_INTERNAL_PORT}"
+    restart: always
+    volumes: 
+      - "./data/nc_data:/usr/app/data"
+    networks:
+      - asset_analyzer_network
+    env_file:
+      - ./env/.env.nocodb
+
+  nocodb-db:
+    image: postgres:15
+    # container_name: postgres
+    environment:
+      POSTGRES_USER: ${NOCODB_DB_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${NOCODB_DB_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${NOCODB_DB_POSTGRES_DB}
+    ports:
+      - "${NOCODB_DB_POSTGRES_PUBLIC_PORT}:${NOCODB_DB_POSTGRES_INTERNAL_PORT}"
+    volumes:
+      - ./data/nocodb-db:/var/lib/postgresql/data
+    healthcheck: 
+      interval: 10s
+      retries: 10
+      test: "pg_isready -U \"$$NOCODB_DB_POSTGRES_USER\" -d \"$$NOCODB_DB_POSTGRES_DB\""
+      timeout: 2s
+    networks:
+      - asset_analyzer_network
+    env_file:
+      - ./.env

@@ -1,0 +1,105 @@
+# This configuration file is for the **development** setup.
+# For a production example please refer to getredash/setup repository on GitHub.
+version: "2.2"
+x-redash-service: &redash-service
+  build:
+    context: ./docker_files/redash
+    dockerfile: ./Dockerfile
+    args:
+      skip_frontend_build: "false"  # set to empty string to build
+  # image: redash/redash:10.1.0.b50633
+  # image: redash/redash:preview
+  volumes:
+    - ./docker_files/redash:/app/
+  env_file:
+    - .env
+
+x-redash-environment: &redash-environment
+  REDASH_LOG_LEVEL: ${REDASH_LOG_LEVEL}
+  REDASH_REDIS_URL: ${REDASH_REDIS_URL}
+  REDASH_DATABASE_URL: ${REDASH_DATABASE_URL}
+  REDASH_RATELIMIT_ENABLED: ${REDASH_RATELIMIT_ENABLED}
+  REDASH_MAIL_DEFAULT_SENDER: ${REDASH_MAIL_DEFAULT_SENDER}
+  REDASH_MAIL_SERVER: ${REDASH_MAIL_SERVER}
+  REDASH_ENFORCE_CSRF: ${REDASH_ENFORCE_CSRF}
+  REDASH_GUNICORN_TIMEOUT: ${REDASH_GUNICORN_TIMEOUT}
+  REDASH_SECRET_KEY: ${REDASH_SECRET_KEY}
+  # REDASH_COOKIE_SECRET: ${REDASH_COOKIE_SECRET}
+  # Set secret keys in the .env file
+
+services:
+  
+  redash-server:
+    <<: *redash-service
+    command: dev_server
+    depends_on:
+      - redash-postgres
+      - redash-redis
+    ports:
+      - "${REDASH_SERVER_PUBLIC_PORT_1}:${REDASH_SERVER_INTERNAL_PORT_1}"
+      - "${REDASH_SERVER_PUBLIC_PORT_2}:${REDASH_SERVER_INTERNAL_PORT_2}"
+    # entrypoint: ['bash ./bin/docker-entrypoint create_db']
+    environment:
+      <<: *redash-environment
+      PYTHONUNBUFFERED: ${REDASH_SERVER_PYTHONUNBUFFERED}
+    networks:
+      - asset_analyzer_network
+
+  redash-scheduler:
+    <<: *redash-service
+    command: dev_scheduler
+    depends_on:
+      - redash-server
+    environment:
+      <<: *redash-environment
+    networks:
+      - asset_analyzer_network
+
+  redash-worker:
+    <<: *redash-service
+    command: dev_worker
+    depends_on:
+      - redash-server
+    environment:
+      <<: *redash-environment
+      PYTHONUNBUFFERED: ${REDASH_WORKER_PYTHONUNBUFFERED}
+    networks:
+      - asset_analyzer_network
+
+  redash-redis:
+    image: redis
+    user: root
+    ports:
+      - ${REDASH_REDIS_PUBLIC_PORT}:${REDASH_REDIS_INTERNAL_PORT}
+    volumes:
+      - ./data/redash/redis:/data
+    networks:
+      - asset_analyzer_network
+    # restart: unless-stopped
+
+  redash-postgres:
+    image: postgres:15
+    # The following turns the DB into less durable, but gains significant performance improvements for the tests run (x3
+    # improvement on my personal machine). We should consider moving this into a dedicated Docker Compose configuration for
+    # tests.
+    ports:
+      - "${REDASH_POSTGRES_PUBLIC_PORT}:${REDASH_POSTGRES_INTERAL_PORT}"
+    # command: "postgres -c fsync=off -c full_page_writes=off -c synchronous_commit=OFF"
+    # restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${REDASH_POSTGRES_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${REDASH_POSTGRES_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${REDASH_POSTGRES_POSTGRES_DB}
+      POSTGRES_HOST_AUTH_METHOD: ${REDASH_POSTGRES_POSTGRES_HOST_AUTH_METHOD}
+    volumes:
+      - ./data/redash/postgres:/var/lib/postgresql/data
+    networks:
+      - asset_analyzer_network
+
+  redash-email:
+    image: djfarrelly/maildev
+    ports:
+      - "${REDASH_EMAIL_PUBLIC_PORT}:${REDASH_EMAIL_INTERNAL_PORT}"
+    networks:
+      - asset_analyzer_network
+    # restart: unless-stopped

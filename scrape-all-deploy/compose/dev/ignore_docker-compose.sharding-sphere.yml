@@ -1,0 +1,47 @@
+version: '3'
+services:
+
+  shardingsphere-zookeeper:
+    ## get more versions of zookeeper here : https://hub.docker.com/_/zookeeper?tab=tags
+    image: "zookeeper:3.4"
+    ports:
+      - "${SHARDINGSPHERE_ZOOKEEPER_PUBLIC_PORT}:${SHARDINGSPHERE_ZOOKEEPER_INTERNAL_PORT}"
+    container_name: shardingsphere-zookeeper
+
+  etcd:
+    ## get more versions of etcd here  : https://quay.io/repository/coreos/etcd?tag=latest&tab=tags
+    image: "quay.io/coreos/etcd:v3.3.12"
+    ports:
+      - "${SHARDINGSPHERE_ETCD_PUBLIC_PORT_1}:${SHARDINGSPHERE_ETCD_INTERNAL_PORT_1}"
+      - "${SHARDINGSPHERE_ETCD_PUBLIC_PORT_2}:${SHARDINGSPHERE_ETCD_INTERNAL_PORT_2}"
+      - "${SHARDINGSPHERE_ETCD_PUBLIC_PORT_3}:${SHARDINGSPHERE_ETCD_INTERNAL_PORT_3}"
+    container_name: shardingsphere-etcd
+    entrypoint: /usr/local/bin/etcd
+    command:
+      - '--advertise-client-urls=http://0.0.0.0:${SHARDINGSPHERE_ETCD_INTERNAL_PORT_1}'
+      - '--listen-client-urls=http://0.0.0.0:${SHARDINGSPHERE_ETCD_INTERNAL_PORT_1}'
+      - '--initial-advertise-peer-urls=http://0.0.0.0:${SHARDINGSPHERE_ETCD_INTERNAL_PORT_2}'
+      - '--listen-peer-urls=http://0.0.0.0:${SHARDINGSPHERE_ETCD_INTERNAL_PORT_2}'
+      - '--initial-cluster'
+      - 'default=http://0.0.0.0:${SHARDINGSPHERE_ETCD_INTERNAL_PORT_2}'
+
+  shardingsphere-proxy:
+    ## get more versions of proxy here : https://hub.docker.com/r/apache/shardingsphere-proxy/tags
+    image: "apache/shardingsphere-proxy:latest"
+    container_name: shardingsphere-proxy
+    depends_on:
+     - main-db-1
+    ## wait-for-it.sh will make proxy entry point wait until Postgres container 5432 port open
+    entrypoint: >
+      /bin/sh -c "/opt/wait-for-it.sh main-db-1:5432 --timeout=20 --strict --
+      && /opt/shardingsphere-proxy/bin/start.sh ${SHARDINGSPHERE_PROXY_INTERNAL_PORT} 
+      && tail -f /opt/shardingsphere-proxy/logs/stdout.log"
+    ports: 
+     - "${SHARDINGSPHERE_PROXY_PUBLIC_PORT}:${SHARDINGSPHERE_PROXY_INTERNAL_PORT}"
+    links:
+     - "main-db-1:postgres"
+    volumes:
+     - ./conf/sharding_sphere:/opt/shardingsphere-proxy/conf
+     - ./scripts/wait-for-it.sh:/opt/wait-for-it.sh
+    environment:
+     - JVM_OPTS=${SHARDINGSPHERE_PROXY_JVM_OPTS}

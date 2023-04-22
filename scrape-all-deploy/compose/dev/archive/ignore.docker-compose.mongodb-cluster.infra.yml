@@ -1,0 +1,262 @@
+version: "3.7"
+
+services:
+
+  ## Shards 03
+  # shard03-a:
+  #   image: mongo:6.0.1
+  #   container_name: shard-03-node-a
+  #   entrypoint: mongod --port ${MONGO_SHARD_3A_PORT} --shardsvr --replSet ${MONGO_SHARD_3A_REPLICA_SET_NAME} --bind_ip_all
+  #   volumes:
+  #     - ./scripts:/scripts
+  #     - ./data/mongo_cluster/shard03_a/db:/data/db
+  #     - ./data/mongo_cluster/shard03_a/configdb:/data/configdb
+  #   ports:
+  #     - "${MONGO_SHARD_3A_PUBLIC_PORT}:${MONGO_SHARD_3A_PORT}"
+  #   links:
+  #     - shard03-b
+  #     - shard03-c
+  #   env_file:
+  #     - ./env
+  #   restart: always
+
+  # shard03-b:
+  #   image: mongo:6.0.1
+  #   container_name: shard-03-node-b
+  #   entrypoint: mongod --port ${MONGO_SHARD_3B_PORT} --shardsvr --replSet ${MONGO_SHARD_3B_REPLICA_SET_NAME} --bind_ip_all
+  #   volumes:
+  #     - ./scripts:/scripts
+  #     - ./data/mongo_cluster/shard03_b/db:/data/db
+  #     - ./data/mongo_cluster/shard03_b/configdb:/data/configdb
+  #   ports:
+  #     - "${MONGO_SHARD_3B_PUBLIC_PORT}:${MONGO_SHARD_3B_PORT}"
+  #   env_file:
+  #     - ./env
+  #   restart: always
+      
+  # shard03-c:
+  #   image: mongo:6.0.1
+  #   container_name: shard-03-node-c
+  #   entrypoint: mongod --port ${MONGO_SHARD_3C_PORT} --shardsvr --replSet ${MONGO_SHARD_3C_REPLICA_SET_NAME} --bind_ip_all
+  #   volumes:
+  #     - ./scripts:/scripts
+  #     - ./data/mongo_cluster/shard03_c/db:/data/db
+  #     - ./data/mongo_cluster/shard03_c/configdb:/data/configdb
+  #   ports:
+  #     - "${MONGO_SHARD_3C_PUBLIC_PORT}:${MONGO_SHARD_3C_PORT}"
+  #   env_file:
+  #     - ./env
+  #   restart: always
+
+  ## Router
+  router01:
+    image: mongo:6.0.1
+    container_name: router-01
+    # command: mongos --port ${MONGO_ROUTER_1_PORT} --configdb rs-config-server/configsvr01:${MONGO_CONFIG_SERVER_1_PORT},configsvr02:${MONGO_CONFIG_SERVER_2_PORT},configsvr03:${MONGO_CONFIG_SERVER_3_PORT} --bind_ip_all
+    command: mongos --port ${MONGO_ROUTER_1_PORT} --configdb rs-config-server/configsvr01:${MONGO_CONFIG_SERVER_1_PORT},configsvr02:${MONGO_CONFIG_SERVER_2_PORT} --bind_ip_all 
+    ports:
+      - "${MONGO_ROUTER_1_PUBLIC_PORT}:${MONGO_ROUTER_1_PORT}"
+    volumes:
+      - ./scripts:/scripts
+      - ./data/mongo_cluster/router01/db:/data/db
+      - ./data/mongo_cluster/router01/configdb:/data/configdb
+    env_file:
+      - ./.env
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROUTER_1_INITDB_ROOT_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROUTER_1_INITDB_ROOT_PASSWORD}
+    restart: always
+
+  router02:
+    image: mongo:6.0.1
+    container_name: router-02
+    # command: mongos --port ${MONGO_ROUTER_2_PORT} --configdb rs-config-server/configsvr01:${MONGO_CONFIG_SERVER_1_PORT},configsvr02:${MONGO_CONFIG_SERVER_2_PORT},configsvr03:${MONGO_CONFIG_SERVER_3_PORT} --bind_ip_all
+    command: mongos --port ${MONGO_ROUTER_2_PORT} --configdb rs-config-server/configsvr01:${MONGO_CONFIG_SERVER_1_PORT},configsvr02:${MONGO_CONFIG_SERVER_2_PORT} --bind_ip_all
+    volumes:
+      - ./scripts:/scripts
+      - ./data/mongo_cluster/router02/db:/data/db
+      - ./data/mongo_cluster/router02/configdb:/data/configdb
+    ports:
+      - "${MONGO_ROUTER_2_PUBLIC_PORT}:${MONGO_ROUTER_2_PORT}"
+    links:
+      - router01
+    env_file:
+      - ./.env
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROUTER_2_INITDB_ROOT_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROUTER_2_INITDB_ROOT_PASSWORD}
+    restart: always
+
+  ## Config Servers
+  configsvr01:
+    image: mongo:6.0.1
+    container_name: mongo-config-01 
+    command: mongod --port ${MONGO_CONFIG_SERVER_1_PORT} --configsvr --replSet ${MONGO_CONFIG_SERVER_1_REPLICA_SET_NAME} --bind_ip_all 
+    volumes:
+      - ./scripts:/scripts 
+      - ./data/mongo_cluster/configsvr01/db:/data/db
+      - ./data/mongo_cluster/configsvr01/configdb:/data/configdb
+    ports:
+      - "${MONGO_CONFIG_SERVER_1_PUBLIC_PORT}:${MONGO_CONFIG_SERVER_1_PORT}"
+    links:
+      - shard01-a
+      - shard02-a
+      # - shard03-a
+    env_file:
+      - ./.env
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_CONFIG_1_INITDB_ROOT_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_CONFIG_1_INITDB_ROOT_PASSWORD}
+    restart: always
+
+  configsvr02:
+    image: mongo:6.0.1
+    container_name: mongo-config-02 
+    command: mongod --port ${MONGO_CONFIG_SERVER_2_PORT} --configsvr --replSet ${MONGO_CONFIG_SERVER_2_REPLICA_SET_NAME} --bind_ip_all
+    volumes:
+      - ./scripts:/scripts
+      - ./data/mongo_cluster/configsvr02/db:/data/db
+      - ./data/mongo_cluster/configsvr02/configdb:/data/configdb
+    ports:
+      - "${MONGO_CONFIG_SERVER_2_PUBLIC_PORT}:${MONGO_CONFIG_SERVER_2_PORT}"
+    links:
+      - configsvr01
+    env_file:
+      - ./.env
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_CONFIG_2_INITDB_ROOT_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_CONFIG_2_INITDB_ROOT_PASSWORD}
+    restart: always
+
+  # configsvr03:
+  #   image: mongo:6.0.1
+  #   container_name: mongo-config-03 
+  #   entrypoint: mongod --port ${MONGO_CONFIG_SERVER_3_PORT} --configsvr --replSet ${MONGO_CONFIG_SERVER_3_REPLICA_SET_NAME} --bind_ip_all
+  #   volumes:
+  #     - ./scripts:/scripts
+  #     - ./data/mongo_cluster/configsvr03/db:/data/db
+  #     - ./data/mongo_cluster/configsvr03/configdb:/data/configdb
+  #   ports:
+  #     - "${MONGO_CONFIG_SERVER_3_PUBLIC_PORT}:${MONGO_CONFIG_SERVER_3_PORT}"
+  #   links:
+  #     - configsvr02
+  #   env_file:
+  #     - ./env
+  #   restart: always
+
+  ## Shards
+  ## Shards 01
+   
+  shard01-a:
+    image: mongo:6.0.1
+    container_name: shard-01-node-a
+    command: mongod --port ${MONGO_SHARD_1A_PORT} --auth --shardsvr --replSet ${MONGO_SHARD_1A_REPLICA_SET_NAME} --bind_ip_all 
+    volumes:
+      - ./scripts:/scripts
+      - ./data/mongo_cluster/shard01_a/db:/data/db
+      - ./data/mongo_cluster/shard01_a/configdb:/data/configdb
+    ports:
+      - "${MONGO_SHARD_1A_PUBLIC_PORT}:${MONGO_SHARD_1A_PORT}"
+    links:
+      - shard01-b
+      - shard01-c
+    env_file:
+      - ./.env
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_SHARD_1A_INITDB_ROOT_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_SHARD_1A_INITDB_ROOT_PASSWORD}
+    restart: always
+
+  shard01-b:
+    image: mongo:6.0.1
+    container_name: shard-01-node-b
+    command: mongod --port ${MONGO_SHARD_1B_PORT} --auth --shardsvr --replSet ${MONGO_SHARD_1B_REPLICA_SET_NAME} --bind_ip_all
+    volumes:
+      - ./scripts:/scripts
+      - ./data/mongo_cluster/shard01_b/db:/data/db
+      - ./data/mongo_cluster/shard01_b/configdb:/data/configdb
+    ports:
+      - "${MONGO_SHARD_1B_PUBLIC_PORT}:${MONGO_SHARD_1B_PORT}"
+    env_file:
+      - ./.env
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_SHARD_1B_INITDB_ROOT_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_SHARD_1B_INITDB_ROOT_PASSWORD}
+    restart: always
+
+  shard01-c:
+    image: mongo:6.0.1
+    container_name: shard-01-node-c
+    command: mongod --port ${MONGO_SHARD_1C_PORT} --auth --shardsvr --replSet ${MONGO_SHARD_1C_REPLICA_SET_NAME} --bind_ip_all
+    volumes:
+      - ./scripts:/scripts
+      - ./data/mongo_cluster/shard01_c/db:/data/db
+      - ./data/mongo_cluster/shard01_c/configdb:/data/configdb
+    ports:
+      - "${MONGO_SHARD_1C_PUBLIC_PORT}:${MONGO_SHARD_1C_PORT}"
+    env_file:
+      - ./.env
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_SHARD_1C_INITDB_ROOT_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_SHARD_1C_INITDB_ROOT_PASSWORD}
+    restart: always
+
+  ## Shards 02
+  shard02-a:
+    image: mongo:6.0.1
+    container_name: shard-02-node-a
+    command: mongod --port ${MONGO_SHARD_2A_PORT} --auth --shardsvr --replSet ${MONGO_SHARD_2A_REPLICA_SET_NAME} --bind_ip_all 
+    volumes:
+      - ./scripts:/scripts
+      - ./data/mongo_cluster/shard02_a/db:/data/db
+      - ./data/mongo_cluster/shard02_a/configdb:/data/configdb
+    ports:
+      - "${MONGO_SHARD_2A_PUBLIC_PORT}:${MONGO_SHARD_2A_PORT}"
+    links:
+      - shard02-b
+      - shard02-c
+    env_file:
+      - ./.env
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_SHARD_2A_INITDB_ROOT_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_SHARD_2A_INITDB_ROOT_PASSWORD}
+    restart: always
+
+  shard02-b:
+    image: mongo:6.0.1
+    container_name: shard-02-node-b
+    command: mongod --port ${MONGO_SHARD_2B_PORT} --auth --shardsvr --replSet ${MONGO_SHARD_2B_REPLICA_SET_NAME} --bind_ip_all
+    volumes:
+      - ./scripts:/scripts
+      - ./data/mongo_cluster/shard02_b/db:/data/db
+      - ./data/mongo_cluster/shard02_b/configdb:/data/configdb
+    ports:
+      - "${MONGO_SHARD_2B_PUBLIC_PORT}:${MONGO_SHARD_2B_PORT}"
+    env_file:
+      - ./.env
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_SHARD_2B_INITDB_ROOT_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_SHARD_2C_INITDB_ROOT_PASSWORD}
+    restart: always
+
+  shard02-c:
+    image: mongo:6.0.1
+    container_name: shard-02-node-c
+    command: mongod --port ${MONGO_SHARD_2C_PORT} --auth --shardsvr --replSet ${MONGO_SHARD_2C_REPLICA_SET_NAME} --bind_ip_all
+    volumes:
+      - ./scripts:/scripts
+      - ./data/mongo_cluster/shard02_c/db:/data/db
+      - ./data/mongo_cluster/shard02_c/configdb:/data/configdb
+    ports:
+      - "${MONGO_SHARD_2C_PUBLIC_PORT}:${MONGO_SHARD_2C_PORT}"
+    env_file:
+      - ./.env
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_SHARD_2C_INITDB_ROOT_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_SHARD_2C_INITDB_ROOT_PASSWORD}
+    restart: always
+
+networks:
+  default:
+    name: asset_analyzer_network
+    driver: bridge

@@ -1,0 +1,24 @@
+version: "3.7"
+
+services:
+
+  main-db-1:
+    image: postgres:15
+    # container_name: postgres
+    environment:
+      POSTGRES_USER: ${MAIN_DB_1_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${MAIN_DB_1_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${MAIN_DB_1_POSTGRES_DB}
+    ports:
+      - "${MAIN_DB_1_POSTGRES_PUBLIC_PORT}:${MAIN_DB_1_POSTGRES_INTERNAL_PORT}"
+    volumes:
+      - ./data/main-db-1:/var/lib/postgresql/data
+    healthcheck: 
+      interval: 10s
+      retries: 10
+      test: "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""
+      timeout: 2s
+    networks:
+      - asset_analyzer_network
+    env_file:
+      - ./.env

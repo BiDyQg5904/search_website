@@ -1,0 +1,175 @@
+version: "3.7"
+
+services:
+
+  zoo1:
+    image: confluentinc/cp-zookeeper:7.3.0
+    hostname: zoo1
+    container_name: zoo1
+    ports:
+      - "${ZOOKEEPER_1_PUBLIC_PORT}:${ZOOKEEPER_1_PORT}"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: ${ZOOKEEPER_1_CLIENT_PORT}
+      ZOOKEEPER_SERVER_ID: ${ZOOKEEPER_1_SERVER_ID}
+      ZOOKEEPER_SERVERS: ${ZOOKEEPER_1_SERVERS}
+    healthcheck:
+      test: ["CMD", "bash", "-c", "cat < /dev/null > /dev/tcp/127.0.0.1/${ZOOKEEPER_1_CLIENT_PORT}"]
+      interval: 5s
+      timeout: 60s
+      retries: 120
+    volumes:
+      - ./data/zk-kafka/zoo1/data:/var/lib/zookeeper/data
+      - ./data/zk-kafka/zoo1/log:/var/lib/zookeeper/log
+    user: root
+    env_file: 
+    - ./.env
+
+  zoo2:
+    image: confluentinc/cp-zookeeper:7.3.0
+    hostname: zoo2
+    container_name: zoo2
+    ports:
+      - "${ZOOKEEPER_2_PUBLIC_PORT}:${ZOOKEEPER_2_PORT}"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: ${ZOOKEEPER_2_CLIENT_PORT}
+      ZOOKEEPER_SERVER_ID: ${ZOOKEEPER_2_SERVER_ID}
+      ZOOKEEPER_SERVERS: ${ZOOKEEPER_2_SERVERS}
+    healthcheck:
+      test: ["CMD", "bash", "-c", "cat < /dev/null > /dev/tcp/127.0.0.1/${ZOOKEEPER_2_CLIENT_PORT}"]
+      interval: 5s
+      timeout: 60s
+      retries: 120
+    volumes:
+      - ./data/zk-kafka/zoo2/data:/var/lib/zookeeper/data
+      - ./data/zk-kafka/zoo2/log:/var/lib/zookeeper/log
+    user: root
+    env_file: 
+    - ./.env
+
+  zoo3:
+    image: confluentinc/cp-zookeeper:7.3.0
+    hostname: zoo3
+    container_name: zoo3
+    ports:
+      - "${ZOOKEEPER_3_PUBLIC_PORT}:${ZOOKEEPER_3_PORT}"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: ${ZOOKEEPER_3_CLIENT_PORT}
+      ZOOKEEPER_SERVER_ID: ${ZOOKEEPER_3_SERVER_ID}
+      ZOOKEEPER_SERVERS: ${ZOOKEEPER_3_SERVERS}
+    healthcheck:
+      test: ["CMD", "bash", "-c", "cat < /dev/null > /dev/tcp/127.0.0.1/${ZOOKEEPER_3_CLIENT_PORT}"]
+      interval: 5s
+      timeout: 60s
+      retries: 120
+    volumes:
+      - ./data/zk-kafka/zoo3/data:/var/lib/zookeeper/data
+      - ./data/zk-kafka/zoo3/log:/var/lib/zookeeper/log
+    user: root
+    env_file: 
+    - ./.env
+
+  kafka1:
+    image: confluentinc/cp-kafka:7.3.0
+    hostname: kafka1
+    container_name: kafka1
+    ports:
+      - "${KAFKA_1_EXTERNAL_PUBLIC_PORT}:${KAFKA_1_EXTERNAL_PORT}"
+      - "${KAFKA_1_INTERNAL_PUBLIC_PORT}:${KAFKA_1_INTERNAL_PORT}"
+    environment:
+      KAFKA_ADVERTISED_LISTENERS: ${KAFKA_1_ADVERTISED_LISTENERS}
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: ${KAFKA_1_LISTENER_SECURITY_PROTOCOL_MAP}
+      KAFKA_INTER_BROKER_LISTENER_NAME: ${KAFKA_1_INTER_BROKER_LISTENER_NAME}
+      KAFKA_ZOOKEEPER_CONNECT: ${KAFKA_1_ZOOKEEPER_CONNECT}
+      KAFKA_BROKER_ID: ${KAFKA_1_BROKER_ID}
+      KAFKA_LOG4J_LOGGERS: ${KAFKA_1_LOG4J_LOGGERS}
+      KAFKA_AUTHORIZER_CLASS_NAME: ${KAFKA_1_AUTHORIZER_CLASS_NAME}
+      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: ${KAFKA_1_ALLOW_EVERYONE_IF_NO_ACL_FOUND}
+    depends_on:
+      - zoo1
+      - zoo2
+      - zoo3
+    volumes:
+      - ./data/zk-kafka/kafka1/data:/var/lib/kafka/data
+    user: root
+    env_file: 
+    - ./.env
+
+  kafka2:
+    image: confluentinc/cp-kafka:7.3.0
+    hostname: kafka2
+    container_name: kafka2
+    ports:
+      - "${KAFKA_2_EXTERNAL_PUBLIC_PORT}:${KAFKA_2_EXTERNAL_PORT}"
+      - "${KAFKA_2_INTERNAL_PUBLIC_PORT}:${KAFKA_2_INTERNAL_PORT}"
+    environment:
+      KAFKA_ADVERTISED_LISTENERS: ${KAFKA_2_ADVERTISED_LISTENERS}
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: ${KAFKA_2_LISTENER_SECURITY_PROTOCOL_MAP}
+      KAFKA_INTER_BROKER_LISTENER_NAME: ${KAFKA_2_INTER_BROKER_LISTENER_NAME}
+      KAFKA_ZOOKEEPER_CONNECT: ${KAFKA_2_ZOOKEEPER_CONNECT}
+      KAFKA_BROKER_ID: ${KAFKA_2_BROKER_ID}
+      KAFKA_LOG4J_LOGGERS: ${KAFKA_2_LOG4J_LOGGERS}
+      KAFKA_AUTHORIZER_CLASS_NAME: ${KAFKA_2_AUTHORIZER_CLASS_NAME}
+      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: ${KAFKA_2_ALLOW_EVERYONE_IF_NO_ACL_FOUND}
+    depends_on:
+      - zoo1
+      - zoo2
+      - zoo3
+    volumes:
+      - ./data/zk-kafka/kafka2/data:/var/lib/kafka/data
+    user: root
+    env_file: 
+    - ./.env
+
+  kafka3:
+    image: confluentinc/cp-kafka:7.3.0
+    hostname: kafka3
+    container_name: kafka3
+    ports:
+      - "${KAFKA_3_EXTERNAL_PUBLIC_PORT}:${KAFKA_3_EXTERNAL_PORT}"
+      - "${KAFKA_3_INTERNAL_PUBLIC_PORT}:${KAFKA_3_INTERNAL_PORT}"
+    environment:
+      KAFKA_ADVERTISED_LISTENERS: ${KAFKA_3_ADVERTISED_LISTENERS}
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: ${KAFKA_3_LISTENER_SECURITY_PROTOCOL_MAP}
+      KAFKA_INTER_BROKER_LISTENER_NAME: ${KAFKA_3_INTER_BROKER_LISTENER_NAME}
+      KAFKA_ZOOKEEPER_CONNECT: ${KAFKA_3_ZOOKEEPER_CONNECT}
+      KAFKA_BROKER_ID: ${KAFKA_3_BROKER_ID}
+      KAFKA_LOG4J_LOGGERS: ${KAFKA_3_LOG4J_LOGGERS}
+      KAFKA_AUTHORIZER_CLASS_NAME: ${KAFKA_3_AUTHORIZER_CLASS_NAME}
+      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: ${KAFKA_3_ALLOW_EVERYONE_IF_NO_ACL_FOUND}
+    depends_on:
+      - zoo1
+      - zoo2
+      - zoo3
+    volumes:
+      - ./data/zk-kafka/kafka3/data:/var/lib/kafka/data
+    user: root
+    env_file: 
+    - ./.env
+
+  kafka-schema-registry:
+    image: confluentinc/cp-schema-registry:7.3.0
+    hostname: kafka-schema-registry
+    container_name: kafka-schema-registry
+    depends_on:
+      - zoo1
+      - zoo2
+      - zoo3
+      - kafka1
+      - kafka2
+      - kafka3
+    ports:
+      - "${KAFKA_SCHEMA_REGISTRY_PUBLIC_PORT}:${KAFKA_SCHEMA_REGISTRY_PORT}"
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: ${KAFKA_SCHEMA_REGISTRY_SCHEMA_REGISTRY_HOST_NAME}
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: ${KAFKA_SCHEMA_REGISTRY_SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS}
+      SCHEMA_REGISTRY_LISTENERS: ${KAFKA_SCHEMA_REGISTRY_SCHEMA_REGISTRY_LISTENERS}
+    volumes:
+      - ./data/zk-kafka/kafka-schema-registry/data:/var/lib/kafka/data
+    user: root
+    env_file: 
+    - ./.env
+
+networks:
+  default:
+    name: asset_analyzer_network
+    driver: bridge

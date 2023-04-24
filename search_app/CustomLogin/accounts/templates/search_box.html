@@ -1,0 +1,32 @@
+<form action="/search" method="post">
+    {% csrf_token %}
+    <input type="text" name="query" placeholder="What are you looking for ?" value="">
+    <button type="submit">Search</button>
+</form>
+
+<style>
+    form {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+input[type="text"] {
+  padding: 10px;
+  border: 2px solid #ccc;
+  border-radius: 5px;
+  font-size: 16px;
+  width: 300px;
+  margin-right: 10px;
+}
+
+button[type="submit"] {
+  padding: 10px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+}
+</style>

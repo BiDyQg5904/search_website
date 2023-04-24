@@ -17,3 +17,12 @@ scrape-all-deploy/compose/**/up-service.json
 scrape-all-deploy/compose/**/ssl/kafka/truststore/ca-key
 
 venv/
+
+elasticsearch/venv-search
+
+crawldata/venv_crawl
+
+search_app/venvv
+
+crawldata/__pycache__
+
